@@ -28,13 +28,17 @@ const addMsgToRequest = function (req, res, next) {
 app.use(
   cors({origin: 'http://localhost:3000'})
 );
-app.use('/read/usernames', addMsgToRequest);
+app.use('/read/user', addMsgToRequest);
 
-app.get('/read/usernames', (req, res) => {
-  let usernames = req.users.map(function(user) {
-    return {id: user.id, username: user.username};
-  });
-  res.send(usernames);
+app.get('/read/user', (req, res) => {
+  const { username } = req.query;
+  const user = req.users.find(user => user.username === username);
+  
+  if (user) {
+    res.send(user);
+  } else {
+    res.status(404).json({ error: { message: 'User not found', status: 404 } });
+  }
 });
 
 app.use(express.json());

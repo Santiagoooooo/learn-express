@@ -33,10 +33,44 @@ app.use(
 );
 app.use(addMsgToRequest);
 
-app.use('/read', readUsers);
+// Create Express Router instances for read and write routes
+const readRouter = express.Router();
+const writeRouter = express.Router();
+
+// Read routes
+readRouter.get('/usernames', (req, res) => {
+  let usernames = req.users.map(function(user) {
+    return {id: user.id, username: user.username};
+  });
+  res.send(usernames);
+});
+
+readRouter.get('/user', (req, res) => {
+  const { username } = req.query;
+  const user = req.users.find(user => user.username === username);
+  
+  if (user) {
+    res.send(user);
+  } else {
+    res.status(404).json({ error: { message: 'User not found', status: 404 } });
+  }
+});
+
+// Write routes
+writeRouter.post('/adduser', (req, res) => {
+  let newuser = req.body;
+  req.users.push(newuser);
+  fs.writeFile(path.resolve(__dirname, '../data/users.json'), JSON.stringify(req.users), (err) => {
+    if (err) console.log('Failed to write');
+    else console.log('User Saved');
+  });
+  res.send('done');
+});
+
+app.use('/read', readRouter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use('/write', writeUsers);
+app.use('/write', writeRouter);
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
